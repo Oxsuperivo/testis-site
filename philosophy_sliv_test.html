@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Философия: Тренажер</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; color: #333; }
+        .container { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 750px; width: 100%; }
+        
+        #menu { text-align: center; }
+        h1 { color: #1e293b; margin-bottom: 30px; }
+        .mode-btn { 
+            display: block; width: 100%; padding: 22px; margin: 12px 0; 
+            font-size: 1.1rem; font-weight: bold; border: none; border-radius: 12px; 
+            cursor: pointer; transition: 0.3s; background: #6366f1; color: white;
+            text-align: center;
+        }
+        .mode-btn:hover { background: #4f46e5; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
+        .mode-btn span { display: block; font-size: 0.85rem; font-weight: normal; opacity: 0.9; margin-top: 5px; }
+
+        #quiz { display: none; }
+        .question { font-size: 1.3rem; font-weight: 600; margin-bottom: 20px; line-height: 1.5; color: #1e293b; }
+        .options { display: grid; gap: 12px; }
+        button.option { 
+            padding: 16px; border: 2px solid #e2e8f0; border-radius: 10px; 
+            background: white; cursor: pointer; text-align: left; 
+            transition: 0.2s; font-size: 1rem; color: #475569; line-height: 1.4;
+        }
+        button.option:hover:not([disabled]) { border-color: #6366f1; background: #f8fafc; }
+        .correct { background: #dcfce7 !important; border-color: #22c55e !important; color: #166534 !important; font-weight: bold; }
+        .wrong { background: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b !important; }
+        
+        .footer { margin-top: 25px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; padding-top: 20px; }
+        #next-btn { padding: 14px 28px; background: #1e293b; color: white; border: none; border-radius: 10px; cursor: pointer; display: none; font-weight: 600; font-size: 1rem; }
+        #next-btn:hover { background: #0f172a; }
+        .stats { font-size: 0.95rem; color: #64748b; font-weight: 500; }
+        #back-to-menu { cursor: pointer; color: #6366f1; text-decoration: none; background: none; border: none; font-size: 0.9rem; font-weight: 600; margin-top: 20px; display: inline-block; }
+        #back-to-menu:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="menu">
+            <h1>Тренажер по Философии</h1>
+            <button class="mode-btn" onclick="startQuiz('full')">
+                Полное заучивание
+                <span>Пройти все 199 вопросов по порядку</span>
+            </button>
+            <button class="mode-btn" onclick="startQuiz('random')">
+                Случайные 40 вопросов
+                <span>40 случайных вопросов без повторений</span>
+            </button>
+        </div>
+
+        <div id="quiz">
+            <div class="question" id="question-text"></div>
+            <div class="options" id="options-container"></div>
+            
+            <div class="footer">
+                <div class="stats">
+                    Вопрос: <span id="current-idx">0</span> / <span id="total-questions">0</span><br>
+                    Правильно: <span id="score">0</span>
+                </div>
+                <button id="next-btn" onclick="nextQuestion()">Следующий →</button>
+            </div>
+            <button id="back-to-menu" onclick="location.reload()">← В меню</button>
+        </div>
+    </div>
+
+    <script>const quizData = [{
+  question: "Which of the following is NOT a main function of philosophy?",
+  options: ["A) Worldview", "B) Methodological", "C) Critical", "D) Technological", "E) Ethical"],
+  answer: "D"
+}, {
+  question: "Which branch of philosophy is directly related to algorithms and programming?",
+  options: ["A) Ontology", "B) Epistemology", "C) Logic", "D) Ethics", "E) Aesthetics"],
+  answer: "C"
+}, {
+  question: "What principle is central to Ancient Greek philosophy?",
+  options: ["A) Theocentrism", "B) Cosmocentrism", "C) Anthropocentrism", "D) Science-centrism", "E) Postmodernism"],
+  answer: "B"
+}, {
+  question: "An ancient philosopher who believed that the material world consists of atoms:",
+  options: ["A) Aristotle", "B) Pyrrho", "C) Zeno", "D) Democritus", "E) Heraclitus"],
+  answer: "D"
+}, {
+  question: "Invisible, omnipresent law of nature, society, human behavior and thinking, the path:",
+  options: ["A) Lee", "B) Fa", "C) Siao", "D) Zhen", "E) Tao"],
+  answer: "E"
+}, {
+  question: "Teachings about Being:",
+  options: ["A) Epistemology", "B) Axiology", "C) Anthology", "D) Anthropology", "E) Ontology"],
+  answer: "E"
+}, {
+  question: "What philosophical direction 'Space and time are forms of our perception' belong to:",
+  options: ["A) Materialism", "B) Objective idealism", "C) Subjective idealism", "D) Dialectical materialism", "E) Mechanistic materialism"],
+  answer: "C"
+}, {
+  question: "Is something that can be said to exist:",
+  options: ["A) Knowledge", "B) Category", "C) Being", "D) Notion", "E) Space"],
+  answer: "C"
+}, {
+  question: "In Hinduism, the absolute reality is designated by the concept:",
+  options: ["A) Atman", "B) Moksha", "C) Jinx", "D) Brahman", "E) Ahimsa"],
+  answer: "D"
+}, {
+  question: "A philosophical method based on the consideration of things, and processes from two opposite points of view:",
+  options: ["A) Analysis", "B) Synthesis", "C) Dialectics", "D) Metaphysics", "E) Eclecticism"],
+  answer: "C"
+}, {
+  question: "Teaching about knowledge:",
+  options: ["A) Ontology", "B) Epistemology", "С) Metaphysics", "D) Axiology", "E) Anthropology"],
+  answer: "B"
+}, {
+  question: "Author of the 'double-truth' theory:",
+  options: ["A) Ibn-Sina", "B) Ibn-Rushd", "C) Al-Kindi", "D) Ibn-Arabi", "E) Al-Ghazali"],
+  answer: "B"
+}, {
+  question: "'Knowledge comes only or primarily from sensory experience':",
+  options: ["A) skepticism", "B) rationalism", "C) agnosticism", "D) phenomenology", "E) empiricism"],
+  answer: "E"
+}, {
+  question: "Transition from the general to the specific knowledge:",
+  options: ["A) induction", "B) analysis", "C) deduction", "D) abstracting", "E) synthesis"],
+  answer: "C"
+}, {
+  question: "Rational knowledge includes:",
+  options: ["A) concept, judgment, conclusion", "B) analogy, hypothesis, ordering", "C) induction, deduction, generalization", "D) intuition, reason, mind", "E) sensation, perception, representation"],
+  answer: "A"
+}, {
+  question: "Who formulated the principle of falsifiability, which can be used to determine the difference between scientific and unscientific knowledge?",
+  options: ["A) Paul Feyerabend", "B) Thomas Kuhn", "C) Karl Popper", "D) Michael Polanyi", "E) Jacques Derrida"],
+  answer: "C"
+}, {
+  question: "Aristotle is credited with developing:",
+  options: ["A) Atomic theory", "B) Ontological argument", "C) Syllogistic logic", "D) Theory of forms", "E) Doctrine of monads"],
+  answer: "C"
+}, {
+  question: "What did Martin Heidegger warn about technology?",
+  options: ["A) It makes life easier and more productive", "B) It changes our way of understanding and revealing the world", "C) It has no moral consequences", "D) It should be avoided completely", "E) It develops only through human will"],
+  answer: "B"
+}, {
+  question: "What is the essence of John Searle's 'Chinese Room' argument?",
+  options: ["A) Formal symbol manipulation is insufficient for true understanding", "B) Computers can possess consciousness", "C) Chinese is the most difficult language", "D) AI will surpass human intelligence", "E) Criticism of Chinese characters"],
+  answer: "A"
+}, {
+  question: "What is the main aim of ethical AI development?",
+  options: ["A) To maximize profit", "B) To replace human decision-making", "C) To ensure AI systems align with human values", "D) To create autonomous machines without regulation", "E) To collect more user data"],
+  answer: "C"
+}, {
+  question: "What is the primary purpose of the Turing Test, as proposed by Alan Turing?",
+  options: ["A) Evaluate computational speed", "B) Determine if a machine can exhibit intelligent behavior indistinguishable from a human", "C) Assess a robot's physical ability", "D) Measure memory capacity", "E) Certify ethical standards"],
+  answer: "B"
+}, {
+  question: "What is the main idea of Renaissance philosophy, focused on man as the center of the universe?",
+  options: ["A) Aesthetic understanding", "B) Anthropocentrism", "C) Individualism", "D) Anti-scholasticism", "E) Rationalism"],
+  answer: "B"
+}, {
+  question: "What does the existentialist principle 'Existence precedes essence' mean?",
+  options: ["A) Purpose is predetermined", "B) Only God assigns meaning", "C) Essence is in DNA", "D) Society imposes essence", "E) Individuals exist first and then define their own essence through choices"],
+  answer: "E"
+}, {
+  question: "What is a common critique of transhumanism?",
+  options: ["A) It risks devaluing human identity", "B) It ignores technological progress", "C) It supports social equality", "D) It promotes environmental sustainability", "E) It limits scientific research"],
+  answer: "A"
+}, {
+  question: "What is the central idea of transhumanism?",
+  options: ["A) Reject all technology", "B) History repeats itself", "C) Focus on moral value of nature", "D) Humans should enhance capacities through advanced technology", "E) Religious doctrine about the end of humanity"],
+  answer: "D"
+}, {
+  question: "What is the central thesis of Johan Huizinga's Homo Ludens regarding play?",
+  options: ["A) Primitive activity", "B) Tool for political manipulation", "C) Biological instinct only", "D) Foundational element of all human culture", "E) Exclusively individual activity"],
+  answer: "D"
+}, {
+  question: "Aesthetics explores:",
+  options: ["A) Only moral issues", "B) Natural phenomena only", "C) Issues of beauty, art and taste", "D) Laws of logic", "E) Social relations in art"],
+  answer: "C"
+}, {
+  question: "According to Immanuel Kant, what is deontology primarily concerned with?",
+  options: ["A) Consequences and benefit", "B) Conformity to moral law regardless of outcomes", "C) Emotional motives", "D) Pursuit of pleasure", "E) Virtuous character traits"],
+  answer: "B"
+}, {
+  question: "The ethical concept of Confucianism, identifying the positive qualities of a person:",
+  options: ["A) a noble person", "B) short man", "C) an official", "D) warlord", "E) statesman"],
+  answer: "A"
+}, {
+  question: "A trait or quality that is deemed morally good and valued as the basis of good moral being:",
+  options: ["A) virtue", "B) dignity", "C) charity", "D) prudence", "E) justice"],
+  answer: "A"
+}, {
+  question: "Which is the branch of philosophy that studies issues concerning art and beauty?",
+  options: ["A) Logics", "B) Epistemology", "C) Aesthetics", "D) Metaphysics", "E) Ethics"],
+  answer: "C"
+}, {
+  question: "What is the primary difference between Kant's and Hegel's approaches to art?",
+  options: ["A) Kant focused on history, Hegel on taste", "B) Kant on evolution of consciousness, Hegel on universal judgment", "C) Kant focused on the individual mind, Hegel on the evolution of consciousness as a whole", "D) Kant saw art as Absolute Spirit, Hegel as pleasure"],
+  answer: "C"
+}, {
+  question: "What is the primary purpose of art for Friedrich Nietzsche?",
+  options: ["A) Reveal objective truth", "B) Form of life affirmation and creative power", "C) Perfect copies of the real world", "D) Replace religious rituals", "E) Function as a structured system"],
+  answer: "B"
+}, {
+  question: "The process of assimilation by an individual of patterns of behavior and social norms is:",
+  options: ["A) Socialization", "B) Adaptation", "C) Anthropogenesis", "D) Nihilism", "E) Determinism"],
+  answer: "A"
+}, {
+  question: "Biological laws of the struggle for existence operating in the social sphere is characteristic of:",
+  options: ["A) Freudian", "B) Positivism", "C) Marxism", "D) Darwinism", "E) Creationism"],
+  answer: "D"
+}, {
+  question: "The emergence of mass culture was associated with:",
+  options: ["A) Rapid development of industry", "B) Development of new territories", "C) Advent of the Internet", "D) Increase in level of education", "E) Discovery of new lands"],
+  answer: "A"
+}, {
+  question: "Which of the following is NOT attributed to God?",
+  options: ["A) Omniscience", "B) Omnipotence", "C) Eternal", "D) Natural", "E) All-knowing"],
+  answer: "D"
+}, {
+  question: "The author of the works 'Canons of Islam' and 'Notes of the Forgotten' is:",
+  options: ["A) Abai Kunanbayev", "B) Shakarim Kudaibergenov", "C) Chokan Valikhanov", "D) Mirzakıp Dulatov", "E) Ibrahim Altynsarin"],
+  answer: "B"
+}, {
+  question: "Creationism is:",
+  options: ["A) God created the world from nothing", "B) Doctrine about materiality", "C) Nominalism", "D) Realism", "E) Fatalism"],
+  answer: "A"
+}, {
+  question: "Existentialists assert that the essence of a person is defined by:",
+  options: ["A) Fate", "B) Production relations", "C) Divine predestination", "D) The individual's own choice", "E) Aesthetic pleasure"],
+  answer: "D"
+}, {
+  question: "According to Nick Bostrom, what is the core idea of transhumanism?",
+  options: ["A) Replace humanity with AI", "B) Promote ethical use of technology to enhance capacities", "C) Return to pre-technological life", "D) Single world government by machines", "E) Stop technological progress"],
+  answer: "B"
+}, {
+  question: "The concepts of 'Ego', 'Id', 'Super-Ego' are basic in:",
+  options: ["A) existentialism", "B) psychoanalysis", "C) personalism", "D) machism", "E) positivism"],
+  answer: "B"
+}, {
+  question: "'Know thyself' - said:",
+  options: ["A) Confucius", "B) Heraclitus", "C) Protagoras", "D) Parmenides", "E) Socrates"],
+  answer: "E"
+}, {
+  question: "The extinction of consciousness and absolute calm in Hinduism is:",
+  options: ["A) Nirvana", "B) Karma", "C) Dharma", "D) Ahimsa", "E) Jiva"],
+  answer: "A"
+}, {
+  question: "Bioethics principle combining avoiding harm and ensuring fair access:",
+  options: ["A) Respect for Autonomy", "B) Do No Harm & Justice", "C) Honesty and Transparency", "D) Corporate Responsibility", "E) Sustainable Development"],
+  answer: "B"
+}, {
+  question: "What does the concept of 'digital ethics' primarily concern?",
+  options: ["A) Economic growth", "B) Moral principles in the digital environment", "C) Internet speed", "D) Software design", "E) Programming rules"],
+  answer: "B"
+}, {
+  question: "The central category of axiology is:",
+  options: ["A) Truth", "B) Value", "C) Morality", "D) Aesthetics", "E) Being"],
+  answer: "B"
+}, {
+  question: "The aesthetic attitude towards reality is determined by the value of:",
+  options: ["A) True knowledge", "B) Material wealth", "C) The sacred", "D) The beautiful", "E) Thinking"],
+  answer: "D"
+}, {
+  question: "Medieval art was dominated by:",
+  options: ["A) mythological subjects", "B) natural landscapes", "C) church themes and biblical scenes", "D) abstract forms", "E) daily life"],
+  answer: "C"
+}, {
+  question: "Who said «Philosophy begins with wonder»:",
+  options: ["A) Aristotle", "B) Thales", "C) Plato", "D) Socrates", "E) Descartes"],
+  answer: "C"
+}, {
+  question: "Father of Greek philosophy is:",
+  options: ["A) Thales", "B) Pythagoras", "C) Augustine", "D) Socrates", "E) Rorty"],
+  answer: "A"
+}, {
+  question: "Language, myth, art, religion in E Cassirer's philosophy are:",
+  options: ["A) Forms of social consciousness", "B) Symbolic forms", "C) Manifestations of Absolute Spirit", "D) Things-in-themselves", "E) Social institutions"],
+  answer: "B"
+}, {
+  question: "Philosophy calling for enduring what cannot be changed and maintaining abstinence:",
+  options: ["A) stoicism", "B) epicureanism", "C) quietism", "D) quakerism", "E) providentialism"],
+  answer: "A"
+}, {
+  question: "The arche of things is apeiron, according to:",
+  options: ["A) Anaximander", "B) Thales", "C) Plato", "D) Socrates", "E) Abai"],
+  answer: "A"
+}, {
+  question: "Democritus belongs to the _ school:",
+  options: ["A) atomistic", "B) ionian", "C) idealist", "D) elean", "E) hellenistic"],
+  answer: "A"
+}, {
+  question: "Idea of separation into the world of things and world of ideas belongs to:",
+  options: ["A) Plato", "B) Pythagoras", "C) Thales", "D) Descartes", "E) Richard Rorty"],
+  answer: "A"
+}, {
+  question: "Dualism of Prakriti and Purusha was presented in:",
+  options: ["A) Samkhya and Yoga", "B) Buddhism and Yoga", "C) Charvaka and Lokayata", "D) Nyaya and Vaisheshika", "E) Vedanta and Nyaya"],
+  answer: "A"
+}, {
+  question: "Author of 'The World as Will and Representation':",
+  options: ["A) A Schopenhauer", "B) Z Freud", "C) F Nietzsche", "D) M Scheler", "E) A Gehlen"],
+  answer: "A"
+}, {
+  question: "Mayeutics is:",
+  options: ["A) Clever debate", "B) Art of conversation", "C) Socratic method of finding truth", "D) Physical perfection", "E) Beginning of being"],
+  answer: "C"
+}, {
+  question: "Method of reasoning from general principles to specific conclusions:",
+  options: ["A) Deduction", "B) Induction", "C) Abduction", "D) Experimentation", "E) Simulation"],
+  answer: "A"
+}, {
+  question: "Method of deriving general principles from specific observations:",
+  options: ["A) Deduction", "B) Induction", "C) Abduction", "D) Experimentation", "E) Simulation"],
+  answer: "B"
+}, {
+  question: "Who represents the anthropocentrism of the Renaissance?",
+  options: ["A) Augustine", "B) Pico della Mirandola", "C) Thomas Aquinas", "D) Aristotle", "E) Descartes"],
+  answer: "B"
+}, {
+  question: "The Renaissance style emphasized:",
+  options: ["A) religious dogmatism", "B) rejection of nature", "C) nature and individualism", "D) emotional chaos", "E) divine abstraction"],
+  answer: "C"
+}, {
+  question: "Which trend is part of contemporary philosophy?",
+  options: ["A) Mythology", "B) Theology only", "C) Environmental Philosophy", "D) Aristotelian Physics", "E) Feudal Cosmology"],
+  answer: "C"
+}, {
+  question: "In what period did individualism and utilitarianism become prominent with nascent capitalism?",
+  options: ["A) Ancient Philosophy", "B) Medieval Philosophy", "C) Renaissance Philosophy", "D) Modern Time", "E) 20th century"],
+  answer: "D"
+}, {
+  question: "Main difference between technocracy and democracy:",
+  options: ["A) Both rely on experts", "B) Technocracy focuses on equality", "C) Technocracy bases decisions on technical expertise", "D) Democracy excludes experts", "E) Technocracy is theoretical"],
+  answer: "C"
+}, {
+  question: "Thinker who said: 'Man is a wolf to man':",
+  options: ["A) Hobbes", "B) Cusa", "C) Pascal", "D) Hegel", "E) Kant"],
+  answer: "A"
+}, {
+  question: "In what period was Man the image and likeness of God?",
+  options: ["A) Ancient Philosophy", "B) Medieval Philosophy", "C) Renaissance Philosophy", "D) Modern Time", "E) 20th century"],
+  answer: "B"
+}, {
+  question: "Concept in Sufism denoting intuitive spiritual knowledge of God:",
+  options: ["A) Pramana", "B) Wu-wei", "C) Ma'rifa", "D) Maya", "E) Anumana"],
+  answer: "C"
+}, {
+  question: "Ontological arguments for God's existence are:",
+  options: ["A) Empirical", "B) Non-empirical", "C) Scientific", "D) Ethical", "E) Experimental"],
+  answer: "B"
+}, {
+  question: "Main difference between philosophy and religion:",
+  options: ["A) Number of gods", "B) Philosophy on faith, religion on reason", "C) Philosophy on reason/arguments, religion on faith/revelation", "D) Philosophy forbids doubt", "E) No difference"],
+  answer: "C"
+}, {
+  question: "Key feature of the culture of philosophical thinking:",
+  options: ["A) Ready-made truths", "B) Prohibition of doubt", "C) Ability to ask questions and argue", "D) Rejection of science", "E) Knowing all facts"],
+  answer: "C"
+}, {
+  question: "How did Martin Heidegger understand philosophy?",
+  options: ["A) Collection of truths", "B) Science of questioning", "C) Religious doctrine", "D) Practical tips", "E) Entertainment"],
+  answer: "B"
+}, {
+  question: "Idealism teaches the supremacy of:",
+  options: ["A) Matter over spirit", "B) Spirit over matter", "C) Nature over God", "D) Science over belief", "E) Body over mind"],
+  answer: "B"
+}, {
+  question: "Plato's allegory of the Cave illustrates:",
+  options: ["A) Illusion of senses", "B) Journey from ignorance to knowledge", "C) Unity of opposites", "D) Immortality of soul", "E) Perfection of forms"],
+  answer: "B"
+}, {
+  question: "Who discovered the four causes governing change?",
+  options: ["A) Plato", "B) Descartes", "C) Aristotle", "D) Aquinas", "E) Leibniz"],
+  answer: "C"
+}, {
+  question: "Rationalism is:",
+  options: ["A) Knowledge based on reason", "B) Knowledge based on experience", "C) Harmony with science", "D) New ideas in culture", "E) Mechanistic picture"],
+  answer: "A"
+}, {
+  question: "Francis Bacon was the founder of:",
+  options: ["A) Nominalism", "B) Rationalism", "C) Empiricism", "D) Realism", "E) Positivism"],
+  answer: "C"
+}, {
+  question: "Philosophical doctrine that denies the possibility of knowing the world:",
+  options: ["A) Skepticism", "B) Agnosticism", "C) Sensationalism", "D) Anthropologism", "E) Atheism"],
+  answer: "B"
+}, {
+  question: "What distinguishes science from pseudoscience for Karl Popper?",
+  options: ["A) History", "B) Moral purpose", "C) Falsifiability", "D) Religion", "E) Popularity"],
+  answer: "C"
+}, {
+  question: "According to Spengler, culture transforms into civilization due to:",
+  options: ["A) Technicism", "B) Massification", "C) Decline of morals", "D) Religion", "E) Power struggle"],
+  answer: "B"
+}, {
+  question: "Meaning of life in serving people is called:",
+  options: ["A) Altruism", "B) Egoism", "C) Hedonism", "D) Asceticism", "E) Eudaimonism"],
+  answer: "A"
+}, {
+  question: "The basis of existentialism is the doctrine of:",
+  options: ["A) Society values", "B) Human existence", "C) Objective laws", "D) Progress", "E) Cognition"],
+  answer: "B"
+}, {
+  question: "What did Socrates mean by 'The unexamined life is not worth living'?",
+  options: ["A) Life without reflection has less value", "B) Life is meaningless", "C) Only philosophers live well", "D) Happiness is impossible", "E) Science is the only way"],
+  answer: "A"
+}, {
+  question: "Three-level model of the soul (vegetative, animal, rational) proposed by:",
+  options: ["A) Plato", "B) Aristotle", "C) Augustine", "D) Descartes", "E) Freud"],
+  answer: "B"
+}, {
+  question: "Concept of 'rectification of names' (zhèng míng) is central to:",
+  options: ["A) Taoism", "B) Buddhism", "C) Sufism", "D) Hinduism", "E) Confucianism"],
+  answer: "E"
+}, {
+  question: "Author of the term 'paradigm':",
+  options: ["A) Sigmund Freud", "B) Erich Fromm", "C) Thomas Kuhn", "D) Bertrand Russell", "E) Imre Lakatos"],
+  answer: "C"
+}, {
+  question: "Author of the 'Canon of medical science':",
+  options: ["A) Al-Kindi", "B) Al-Ghazali", "C) Al-Farabi", "D) Ibn Khaldun", "E) Ibn Sina"],
+  answer: "E"
+}, {
+  question: "Three stages (religious, metaphysical, positive) distinguished by:",
+  options: ["A) Engels", "B) Marx", "C) Kant", "D) Comte", "E) Kierkegaard"],
+  answer: "D"
+}, {
+  question: "Technology as a means of revealing truth changes perception of nature:",
+  options: ["A) Martin Heidegger", "B) Alvin Toffler", "C) Marcuse", "D) Toynbee", "E) Jaspers"],
+  answer: "A"
+}, {
+  question: "Philosopher associated with the Philosophy of Information:",
+  options: ["A) Heidegger", "B) Luciano Floridi", "C) Habermas", "D) Hans Jonas", "E) Abai"],
+  answer: "B"
+}, {
+  question: "Hans Jonas is known for his concept of:",
+  options: ["A) Public sphere", "B) Digital sovereignty", "C) Infosphere", "D) Principle of Responsibility", "E) Posthumanism"],
+  answer: "D"
+}, {
+  question: "Significance of Edmund Gettier's paper:",
+  options: ["A) Definition of knowledge", "B) Knowledge is impossible", "C) Justified True Belief is insufficient", "D) DIKW model", "E) Ancient problem of truth"],
+  answer: "C"
+}, {
+  question: "DIKW model characteristic distinguishing Knowledge from Information:",
+  options: ["A) Meaningful and applicable; answers how/why", "B) Stored in database", "C) Always true", "D) Raw fact", "E) Ethical considerations"],
+  answer: "A"
+}, {
+  question: "Three Truths in Shakarim Kudaiberdiuly's philosophy:",
+  options: ["A) Wealth, Power, Fame", "B) Honesty, Generosity, Bravery", "C) Obedience, Rejection, Loyalty", "D) Faith in God, Love for Humanity, Pursuit of Knowledge", "E) Isolation, Asceticism, Silence"],
+  answer: "D"
+}, {
+  question: "Direction of Aristotle's followers in Medieval Arab-Muslim Philosophy:",
+  options: ["A) Sufism", "B) Kalam", "C) Ismailism", "D) Ishraqism", "E) Peripateticism"],
+  answer: "E"
+}, {
+  question: "Who was called the 'Second Teacher' in world philosophy:",
+  options: ["A) Al-Ghazali", "B) Al-Biruni", "C) Al-Farabi", "D) Al-Khwarizmi", "E) Al-Kindi"],
+  answer: "C"
+}, {
+  question: "Author of laws of dialectics:",
+  options: ["A) G Hegel", "B) L Feuerbach", "C) I Kant", "D) J Fichte", "E) F Schelling"],
+  answer: "A"
+}, {
+  question: "Axiological function of philosophy:",
+  options: ["A) Worldview", "B) Methodological", "C) Recognize values", "D) Motivational", "E) Axiological"],
+  answer: "E"
+}, {
+  question: "J-P Sartre thought a person was condemned to:",
+  options: ["A) suffering", "B) happiness", "C) freedom", "D) love", "E) death"],
+  answer: "C"
+}, {
+  question: "Philosopher putting forward five proofs for God's existence:",
+  options: ["A) Augustine", "B) Ockham", "C) Roger Bacon", "D) Thomas Aquinas", "E) Anselm"],
+  answer: "D"
+}, {
+  question: "Translation of 'religio' from Latin:",
+  options: ["A) bind, connect", "B) person", "C) faith", "D) worshipping", "E) idol"],
+  answer: "A"
+}, {
+  question: "Belief that God is present in all things of nature:",
+  options: ["A) Theology", "B) Syncretism", "C) Animism", "D) Pantheism", "E) Anthropology"],
+  answer: "D"
+}, {
+  question: "Alvin Toffler defines modern society as:",
+  options: ["A) Eco-humanistic", "B) Computer-based", "C) Informational", "D) Civil", "E) Industrial"],
+  answer: "C"
+}, {
+  question: "Concept of 'post-industrial society' proposed by:",
+  options: ["A) Brzezinski", "B) Toffler", "C) Daniel Bell", "D) Rostow", "E) Galbraith"],
+  answer: "C"
+}, {
+  question: "Philosopher who first introduced distinction between culture and civilization:",
+  options: ["A) Rousseau", "B) Schelling", "C) Toynbee", "D) Berdyaev", "E) O Spengler"],
+  answer: "E"
+}, {
+  question: "Lumiere brothers are founders of:",
+  options: ["A) Modernism", "B) Postmodernism", "C) Cinematography", "D) Abstractionism", "E) Photography"],
+  answer: "C"
+}, {
+  question: "Function of art fostering artistic tastes:",
+  options: ["A) Cognitive", "B) Aesthetic", "C) Value-oriented", "D) Moral", "E) Communicative"],
+  answer: "B"
+}, {
+  question: "'Nothing is morally right or wrong because there are no moral features; no judgments are true':",
+  options: ["A) relativism", "B) nihilism", "C) objectivism", "D) ignorance", "E) eliminativism"],
+  answer: "B"
+}, {
+  question: "Meta-ethical theories in which moral knowledge is impossible:",
+  options: ["A) moral skepticism", "B) moral nihilism", "C) moral absenteeism", "D) ethical realism", "E) agnosticism"],
+  answer: "A"
+}, {
+  question: "Moral law: 'Act so that people... have always been only a goal but not a means':",
+  options: ["A) Buddhist ethics", "B) Kant's hypothetical imperative", "C) Schweitzer's ethics", "D) Kant's categorical imperative"],
+  answer: "D"
+}, {
+  question: "Founder of formal logic:",
+  options: ["A) Aristotle", "B) Kant", "C) Descartes", "D) Hegel", "E) Marx"],
+  answer: "A"
+}, {
+  question: "'Language is the house of being' - said:",
+  options: ["A) Jaspers", "B) Heidegger", "C) Sartre", "D) Camus", "E) Popper"],
+  answer: "B"
+}, {
+  question: "'Have the courage to use your own understanding!'",
+  options: ["A) Diderot", "B) Kant", "C) Montaigne", "D) Rousseau", "E) Voltaire"],
+  answer: "B"
+}, {
+  question: "The arche of things, according to Anaximander:",
+  options: ["A) Water", "B) Air", "C) Fire", "D) Ether", "E) Apeiron"],
+  answer: "E"
+}, {
+  question: "According to Anaximenes, the first principle is:",
+  options: ["A) Water", "B) Earth", "C) Fire", "D) Air", "E) Space"],
+  answer: "D"
+}, {
+  question: "Jean Baudrillard's 'simulacra' refers to:",
+  options: ["A) Original code", "B) Greek statues", "C) Copies that refer to no original", "D) Truth through artwork", "E) UI structure"],
+  answer: "C"
+}, {
+  question: "Fundamental concept in Nietzsche's philosophy:",
+  options: ["A) Will to life", "B) Will to power", "C) Will to wealth", "D) Will to God", "E) Will to knowledge"],
+  answer: "B"
+}, {
+  question: "Impartial and just treatment without favoritism:",
+  options: ["A) humbleness", "B) straightforwardness", "C) rigidity", "D) fairness", "E) tolerance"],
+  answer: "D"
+}, {
+  question: "Citizens of the world (cosmopolitans):",
+  options: ["A) Sophists", "B) Cyrenaics", "C) Cynics", "D) Megarians", "E) Stoics"],
+  answer: "C"
+}, {
+  question: "Opposition between culture and civilization first presented in:",
+  options: ["A) Toynbee", "B) Frank", "C) Weber", "D) Collingwood", "E) O Spengler 'The Decline of the West'"],
+  answer: "E"
+}, {
+  question: "According to Spengler, civilization is:",
+  options: ["A) Twilight of gods", "B) Death of culture", "C) Birth of culture", "D) Decline of tech", "E) Beginning of society"],
+  answer: "B"
+}, {
+  question: "The art and theory of interpreting texts:",
+  options: ["A) Communication", "B) Semiotics", "C) Hermeneutics", "D) Poetics", "E) Semantics"],
+  answer: "C"
+}, {
+  question: "Who said: 'Educating the mind without educating the heart is no education at all':",
+  options: ["A) Aristotle", "B) Thales", "C) Plato", "D) Descartes", "E) Socrates"],
+  answer: "A"
+}, {
+  question: "According to Spinoza, everything is governed by:",
+  options: ["A) Absolute necessity", "B) Man will", "C) World soul", "D) Objective laws", "E) God"],
+  answer: "A"
+}, {
+  question: "According to Kant, what makes a person free?",
+  options: ["A) Following nature", "B) Following duty", "C) Cognition", "D) Religion", "E) Utilitarianism"],
+  answer: "B"
+}, {
+  question: "Everything is predestined, man is not free (Fatalism):",
+  options: ["A) Irrationalism", "B) Voluntarism", "C) Fatalism", "D) Rationalism", "E) Sensualism"],
+  answer: "C"
+}, {
+  question: "Social Darwinism driving force:",
+  options: ["A) Will", "B) Spirit", "C) Class struggle", "D) Struggle for existence", "E) Revolutions"],
+  answer: "D"
+}, {
+  question: "Author of 'The End of History':",
+  options: ["A) Weber", "B) Toynbee", "C) F Fukuyama", "D) Spengler", "E) Bell"],
+  answer: "C"
+}, {
+  question: "Mimesis in Ancient Greece art means:",
+  options: ["A) logos", "B) correspondence to physical world", "C) gnosis", "D) eidos", "E) anamnesis"],
+  answer: "B"
+}, {
+  question: "Nietzsche says we must create our own values because:",
+  options: ["A) create own values", "B) destroy everything", "C) imagine form", "D) absurdity", "E) transcendental world"],
+  answer: "A"
+}, {
+  question: "Taoist principles:",
+  options: ["A) non-violence", "B) inaction", "C) non-action (wu-wei) and spontaneity", "D) hedonism", "E) individualism"],
+  answer: "C"
+}, {
+  question: "Nature of values branch:",
+  options: ["A) Ontology", "B) Epistemology", "C) Ethics", "D) Aesthetics", "E) Axiology"],
+  answer: "E"
+}, {
+  question: "Al-Farabi most valuable quality:",
+  options: ["A) Faith", "B) Reason"],
+  answer: "B"
+}, {
+  question: "One-dimensionality 'massification' examined by:",
+  options: ["A) Herbert Marcuse", "B) Toffler", "C) Toynbee", "D) Jaspers", "E) Heidegger"],
+  answer: "A"
+}, {
+  question: "Ataraxia means:",
+  options: ["A) activity", "B) heartlessness", "C) fatigue", "D) wisdom", "E) equanimity"],
+  answer: "E"
+}, {
+  question: "Wu-wei means:",
+  options: ["A) Non-resistance", "B) Action", "C) Order", "D) Non-action", "E) Infinity"],
+  answer: "D"
+}, {
+  question: "Normal science and paradigm shift philosopher:",
+  options: ["A) Lakatos", "B) T Kuhn", "C) Comte", "D) Feyerabend", "E) Wittgenstein"],
+  answer: "B"
+}, {
+  question: "Opposite to verification:",
+  options: ["A) regeneration", "B) simulation", "C) stimulation", "D) falsification", "E) generalization"],
+  answer: "D"
+}, {
+  question: "Mind-body problem philosopher:",
+  options: ["A) Descartes", "B) Aristotle", "C) Plato", "D) Locke", "E) Spinoza"],
+  answer: "A"
+}, {
+  question: "Tabula rasa position:",
+  options: ["A) Rationalism", "B) Dualism", "C) Empiricism", "D) Idealism", "E) Nominalism"],
+  answer: "C"
+}, {
+  question: "Pragmatism statement: Truth is what is...",
+  options: ["A) proven", "B) useful", "C) habitual", "D) incomprehensible", "E) all"],
+  answer: "B"
+}, {
+  question: "Inquiry into 'being in general' is called:",
+  options: ["A) Metaphysics", "B) Ontology", "C) Epistemology", "D) Logic", "E) Phenomenology"],
+  answer: "B"
+}, {
+  question: "Karma in Indian philosophy:",
+  options: ["A) random reward", "B) material wealth", "C) law of cause and effect", "D) ritual", "E) only for ascetics"],
+  answer: "C"
+}, {
+  question: "Kurzweil's singularity defining characteristic:",
+  options: ["A) quantum supremacy", "B) AI surpasses human intelligence", "C) 100% internet", "D) nanobot", "E) collapse"],
+  answer: "B"
+}, {
+  question: "Catharsis is:",
+  options: ["A) purification of emotions", "B) catalepsy", "C) ataraxy", "D) mimesis", "E) phronesis"],
+  answer: "A"
+}, {
+  question: "Author of 'Mathematical Principles of Natural Philosophy':",
+  options: ["A) Bacon", "B) Leibniz", "C) Isaac Newton", "D) Spinoza", "E) Descartes"],
+  answer: "C"
+},{
+        question: "A philosophical concept that denies the possibility of a reasonable knowledge of reality:",
+        options: ["A) Irrationalism", "B) Existentialism", "C) Utilitarianism", "D) Personalism", "E) Pragmatism"],
+        answer: "A"
+    },
+    {
+        question: "Dionysian and Apollonian elements in culture are distinguished by:",
+        options: ["A) Arthur Schopenhauer", "B) Søren Kierkegaard", "C) Albert Camus", "D) Friedrich Nietzsche", "E) Martin Heidegger"],
+        answer: "D"
+    },
+    {
+        question: "Aristotle's 'first philosophy' is known as:",
+        options: ["A) Ethics", "B) Logic", "C) Metaphysics", "D) Epistemology", "E) Natural Science"],
+        answer: "C"
+    },
+    {
+        question: "The ancient Greek philosopher Pythagoras stated:",
+        options: ["A) All things are similar in number", "B) War is the father of everything", "C) Know thyself", "D) I know that I don't know anything", "E) Everything flows"],
+        answer: "A"
+    },
+    {
+        question: "Which is the Epistemological question?",
+        options: ["A) How can we prove our answers?", "B) What sorts of things exist?", "C) What is happiness?", "D) Is some art unethical?", "E) Do divine commands make right acts right?"],
+        answer: "A"
+    },
+    {
+        question: "Deterministic thesis states:",
+        options: ["A) There are no moral norms", "B) The world is governed by strict cause-and-effect relations", "C) Human beings are absolutely free", "D) God directly controls all events", "E) History has no laws"],
+        answer: "B"
+    },
+    {
+        question: "According to Marx, the 'lower of the two stages' of communism is:",
+        options: ["A) Science and theory", "B) Technology and nature", "C) Art and culture", "D) Humanism and labor", "E) Socialism (Labor and life)"],
+        answer: "E"
+    },
+    {
+        question: "The teleological proof of God's existence is:",
+        options: ["A) Based on causality", "B) Based on purpose and order in the world", "C) Based on moral law", "D) Based on revelation", "E) Based on mystical experience"],
+        answer: "B"
+    },
+    {
+        question: "Author of the term 'culture industry':",
+        options: ["A) Hegel", "B) F. Nietzsche", "C) E. Fromm", "D) M. Weber", "E) Adorno"],
+        answer: "E"
+    },
+    {
+        question: "The ethical doctrine according to which the goal of human behavior is to maximize happiness:",
+        options: ["A) Stoicism", "B) Hedonism", "C) Utilitarianism", "D) Asceticism", "E) Eudaimonism"],
+        answer: "C"
+    },
+    {
+        question: "Who said: 'Two things always fill the soul with admiration: the starry sky above and the moral law within'?",
+        options: ["A) Kant", "B) Socrates", "C) Plato", "D) Hume", "E) Nietzsche"],
+        answer: "A"
+    },
+    {
+        question: "Who discovered the World Idea (World Spirit)?",
+        options: ["A) Kant", "B) Socrates", "C) Hume", "D) Plato", "E) Hegel"],
+        answer: "E"
+    },
+    {
+        question: "What is the nature of the Platonic idea?",
+        options: ["A) The idea is immaterial but conceivable", "B) The idea is material but inconceivable", "C) The idea is material and conceivable", "D) The idea is a subjective human thought", "E) The idea is a shadow of a physical object"],
+        answer: "A"
+    },
+    {
+        question: "What are the benefits of studying philosophy?",
+        options: ["A) It provides ready-made answers to all technical questions", "B) It develops critical thinking, creativity, and ethical responsibility", "C) It helps to avoid mathematics", "D) It is only necessary for historians", "E) It hinders innovation"],
+        answer: "B"
+    },
+    {
+        question: "Which philosophical movement corresponds to 'There is nothing in the intellect that was not first in the senses'?",
+        options: ["A) Sensory empiricism", "B) Rationalism", "C) Agnosticism", "D) Idealism", "E) Skepticism"],
+        answer: "A"
+    },
+    {
+        question: "The movement of philosophy that recognizes only things that can be scientifically or logically proved is:",
+        options: ["A) Positivism", "B) Existentialism", "C) Scholasticism", "D) Mysticism", "E) Intuitionism"],
+        answer: "A"
+    },
+    {
+        question: "According to Abai, 'the Power of the Most High is expressed in...':",
+        options: ["A) science and mercy", "B) technology and nature", "C) art and culture", "D) human and society", "E) law and virtue"],
+        answer: "A"
+    },
+    {
+        question: "Author of the game concept of culture:",
+        options: ["A) O. Spengler", "B) J. Huizinga", "C) F. Nietzsche", "D) S. Freud", "E) N. Berdyaev"],
+        answer: "B"
+    },
+    {
+        question: "What is the core concept of Karma in Indian philosophy?",
+        options: ["A) A divine force that randomly rewards", "B) Material wealth as measure", "C) Law of cause and effect", "D) Ritual to please gods", "E) Escape for ascetics"],
+        answer: "C"
+    },
+    {
+        question: "The ancient Greek philosopher who stated: 'I know that I know nothing':",
+        options: ["A) Plato", "B) Aristotle", "C) Socrates", "D) Thales", "E) Protagoras"],
+        answer: "C"
+    },
+    {
+        question: "Which branch of philosophy studies the nature of reality and existence?",
+        options: ["A) Ethics", "B) Aesthetics", "C) Logic", "D) Metaphysics", "E) Politics"],
+        answer: "D"
+    },
+    {
+        question: "The doctrine that all events are predetermined by fate is called:",
+        options: ["A) Existentialism", "B) Fatalism", "C) Nihilism", "D) Hedonism", "E) Stoicism"],
+        answer: "B"
+    },
+    {
+        question: "Who is known for the 'Cogito, ergo sum' (I think, therefore I am)?",
+        options: ["A) Spinoza", "B) Locke", "C) Descartes", "D) Hume", "E) Kant"],
+        answer: "C"
+    },
+    {
+        question: "The view that pleasure is the primary good is:",
+        options: ["A) Asceticism", "B) Hedonism", "C) Stoicism", "D) Cynicism", "E) Deontology"],
+        answer: "B"
+    },
+    {
+        question: "According to Al-Farabi, the perfect city is led by:",
+        options: ["A) A rich merchant", "B) A strong warrior", "C) A philosopher-king", "D) A religious leader", "E) A common citizen"],
+        answer: "C"
+    },
+    {
+        question: "What is the primary method of Phenomenology?",
+        options: ["A) Statistical analysis", "B) Laboratory experiment", "C) Description of conscious experience", "D) Historical comparison", "E) Logical deduction"],
+        answer: "C"
+    },
+    {
+        question: "The term 'Utopia' was coined by:",
+        options: ["A) Machiavelli", "B) Thomas More", "C) Francis Bacon", "D) Tommaso Campanella", "E) Karl Marx"],
+        answer: "B"
+    },
+    {
+        question: "Which philosopher is associated with the concept of the 'Übermensch'?",
+        options: ["A) Hegel", "B) Marx", "C) Nietzsche", "D) Heidegger", "E) Sartre"],
+        answer: "C"
+    },
+    {
+        question: "The 'Golden Mean' is a central concept in the ethics of:",
+        options: ["A) Plato", "B) Socrates", "C) Aristotle", "D) Epicurus", "E) Zeno"],
+        answer: "C"
+    },
+    {
+        question: "In Buddhist philosophy, the state of liberation from suffering is:",
+        options: ["A) Karma", "B) Samsara", "C) Nirvana", "D) Dharma", "E) Maya"],
+        answer: "C"
+    },
+    {
+        question: "The theory of knowledge is also known as:",
+        options: ["A) Ontology", "B) Ethics", "C) Epistemology", "D) Aesthetics", "E) Teleology"],
+        answer: "C"
+    },
+    {
+        question: "Who wrote 'The Social Contract'?",
+        options: ["A) Hobbes", "B) Locke", "C) Rousseau", ") Montesquieu", "E) Voltaire"],
+        answer: "C"
+    },
+    {
+        question: "Which movement emphasizes individual freedom and responsibility?",
+        options: ["A) Structuralism", "B) Existentialism", "C) Positivism", "D) Scholasticism", "E) Marxism"],
+        answer: "B"
+    },
+    {
+        question: "The Socratic method is primarily based on:",
+        options: ["A) Lecturing", "B) Writing", "C) Dialogue and questioning", "D) Silent meditation", "E) Empirical testing"],
+        answer: "C"
+    },
+    {
+        question: "Who is the father of Modern Empiricism?",
+        options: ["A) Descartes", "B) Leibniz", "C) John Locke", "D) Kant", "E) Hegel"],
+        answer: "C"
+    },
+    {
+        question: "The study of the ends or purposes of things is:",
+        options: ["A) Biology", "B) Teleology", "C) Theology", "D) Cosmology", "E) Anthropology"],
+        answer: "B"
+    },
+    {
+        question: "Which philosopher proposed the 'Categorical Imperative'?",
+        options: ["A) Mill", "B) Bentham", "C) Kant", "D) Aristotle", "E) Hume"],
+        answer: "C"
+    },
+    {
+        question: "The 'Allegory of the Cave' appears in which work?",
+        options: ["A) The Laws", "B) The Symposium", "C) The Republic", "D) Phaedo", "E) Apology"],
+        answer: "C"
+    },
+    {
+        question: "Who argued that 'God is dead'?",
+        options: ["A) Marx", "B) Freud", "C) Nietzsche", "D) Darwin", "E) Sartre"],
+        answer: "C"
+    },
+    {
+        question: "Which period is characterized by the slogan 'Back to Nature'?",
+        options: ["A) Enlightenment", "B) Romanticism", "C) Middle Ages", "D) Renaissance", "E) Antiquity"],
+        answer: "B"
+    },
+    {
+        question: "The concept of 'Tabula Rasa' suggests the mind is a:",
+        options: ["A) Pre-programmed computer", "B) Divine spark", "C) Blank slate", "D) Mirror of nature", "E) Dark prison"],
+        answer: "C"
+    },
+    {
+        question: "Who is the author of 'The Prince'?",
+        options: ["A) Leonardo da Vinci", "B) Machiavelli", "C) Erasmus", "D) More", "E) Hobbes"],
+        answer: "B"
+    },
+    {
+        question: "The belief in many gods is:",
+        options: ["A) Monotheism", "B) Polytheism", "C) Atheism", "D) Agnosticism", "E) Deism"],
+        answer: "B"
+    },
+    {
+        question: "Which philosopher is associated with 'Deconstruction'?",
+        options: ["A) Foucault", "B) Derrida", "C) Lyotard", "D) Deleuze", "E) Baudrillard"],
+        answer: "B"
+    },
+    {
+        question: "The principle of 'greatest happiness for the greatest number' is:",
+        options: ["A) Egoism", "B) Altruism", "C) Utilitarianism", "D) Nihilism", "E) Stoicism"],
+        answer: "C"
+    },
+    {
+        question: "Who founded the Academy in Athens?",
+        options: ["A) Socrates", "B) Plato", "C) Aristotle", "D) Epicurus", "E) Zeno"],
+        answer: "B"
+    },
+    {
+        question: "The study of the nature of God and religious belief is:",
+        options: ["A) Philosophy", "B) Theology", "C) Psychology", "D) Sociology", "E) Mythology"],
+        answer: "B"
+    },
+    {
+        question: "Who is the author of 'Leviathan'?",
+        options: ["A) Locke", "B) Rousseau", "C) Hobbes", "D) Mill", "E) Marx"],
+        answer: "C"
+    },
+    {
+        question: "The philosophical school that values logic and physics as means to achieve 'peace of mind':",
+        options: ["A) Epicureanism", "B) Stoicism", "C) Skepticism", "D) Neoplatonism", "E) Cynicism"],
+        answer: "B"
+    },
+    {
+        question: "Which thinker is associated with the 'Conflict of Civilizations'?",
+        options: ["A) Fukuyama", "B) Huntington", "C) Toffler", "D) Bell", "E) Castells"],
+        answer: "B"
+    },
+    {
+        question: "The concept of 'Dasein' (Being-there) was developed by:",
+        options: ["A) Husserl", "B) Heidegger", "C) Jaspers", "D) Buber", "E) Tillich"],
+        answer: "B"
+    },
+    {
+        question: "What is the primary focus of 'Bioethics'?",
+        options: ["A) Computer security", "B) Space exploration", "C) Moral issues in life sciences and medicine", "D) Financial markets", "E) Automotive engineering"],
+        answer: "C"
+    }];</script>
+    <script>
+        let sessionQuestions = []; 
+        let currentIdx = 0;
+        let score = 0;
+        let canAnswer = true;
+
+        function startQuiz(mode) {
+            // Создаем копию всех вопросов
+            let allQuestions = [...quizData];
+
+            if (mode === 'random') {
+                // 1. Перемешиваем весь массив (алгоритм Фишера-Йетса)
+                for (let i = allQuestions.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [allQuestions[i], allQuestions[j]] = [allQuestions[j], allQuestions[i]];
+                }
+                // 2. Берем первые 40 уникальных вопросов
+                sessionQuestions = allQuestions.slice(0, 40);
+            } else {
+                // Полный режим: все 199 по порядку
+                sessionQuestions = allQuestions;
+            }
+
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('quiz').style.display = 'block';
+            document.getElementById('total-questions').innerText = sessionQuestions.length;
+            
+            showQuestion();
+        }
+
+        function showQuestion() {
+            canAnswer = true;
+            const q = sessionQuestions[currentIdx];
+            document.getElementById('question-text').innerText = q.question;
+            document.getElementById('current-idx').innerText = currentIdx + 1;
+            document.getElementById('next-btn').style.display = 'none';
+            
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+
+            q.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(btn, opt, q.answer);
+                container.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(btn, selected, correctLetter) {
+            if (!canAnswer) return;
+            canAnswer = false;
+
+            // Извлекаем букву (первый символ строки)
+            const selectedLetter = selected.trim().charAt(0).toUpperCase();
+            const allBtns = document.querySelectorAll('.option');
+
+            if (selectedLetter === correctLetter.toUpperCase()) {
+                btn.classList.add('correct');
+                score++;
+                document.getElementById('score').innerText = score;
+            } else {
+                btn.classList.add('wrong');
+                // Подсвечиваем правильный вариант для заучивания
+                allBtns.forEach(b => {
+                    if (b.innerText.trim().toUpperCase().startsWith(correctLetter.toUpperCase())) {
+                        b.classList.add('correct');
+                    }
+                });
+            }
+
+            allBtns.forEach(b => b.disabled = true);
+            document.getElementById('next-btn').style.display = 'block';
+        }
+
+        function nextQuestion() {
+            currentIdx++;
+            if (currentIdx < sessionQuestions.length) {
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            const quizDiv = document.getElementById('quiz');
+            const percentage = Math.round((score / sessionQuestions.length) * 100);
+            let message = percentage >= 80 ? "Отличный результат!" : "Нужно еще попрактиковаться.";
+            
+            quizDiv.innerHTML = `
+                <div style="text-align:center; padding: 20px 0;">
+                    <h2 style="color: #1e293b;">Тест завершен!</h2>
+                    <div style="font-size: 4rem; font-weight: bold; color: #6366f1; margin: 20px 0;">${percentage}%</div>
+                    <p style="font-size: 1.2rem; color: #64748b;">Вы ответили правильно на <b>${score}</b> из <b>${sessionQuestions.length}</b> вопросов.</p>
+                    <p style="margin-bottom: 30px; color: #475569;">${message}</p>
+                    <button class="mode-btn" onclick="location.reload()">Вернуться в главное меню</button>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
