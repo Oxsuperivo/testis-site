@@ -22,7 +22,8 @@
         #quiz { display: none; }
         .question-wrap { position: relative; margin-bottom: 20px; }
         .question-meta { position: absolute; right: 0; top: -10px; font-size: 0.78rem; color: #334155; background: #e2e8f0; border: 1px solid #cbd5e1; border-radius: 999px; padding: 4px 10px; max-width: 80%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .question { font-size: 1.3rem; font-weight: 600; margin-bottom: 20px; line-height: 1.5; color: #1e293b; padding-right: 170px; }
+        .question { font-size: 1.3rem; font-weight: 600; margin-bottom: 12px; line-height: 1.5; color: #1e293b; padding-right: 170px; }
+        .question-note { min-height: 18px; font-size: 0.9rem; color: #64748b; margin-bottom: 8px; }
         @media (max-width: 640px) { .question { padding-right: 0; margin-top: 22px; } .question-meta { top: -4px; font-size: 0.72rem; max-width: 100%; } }
         .options { display: grid; gap: 12px; }
         button.option { 
@@ -75,6 +76,7 @@
 
         <div id="quiz">
             <div class="question-wrap"><div class="question-meta" id="question-meta"></div><div class="question" id="question-text"></div></div>
+            <div class="question-note" id="question-note"></div>
             <div class="options" id="options-container"></div>
             
             <div class="footer">
@@ -3561,7 +3563,7 @@
       "D) Plato",
       "E) Thales"
     ],
-    "answer": "B",
+    "answer": "C",
     "variants": [
       1,
       13
@@ -6492,6 +6494,7 @@ const expectedVariantCounts = {
         let sessionQuestions = [];
         let currentIdx = 0;
         let score = 0;
+        let gradedTotal = 0;
         let canAnswer = true;
         let activeVariant = null;
 
@@ -6512,6 +6515,32 @@ const expectedVariantCounts = {
 
         function buildOrderSignature(items) {
             return items.map((x) => x.__idx).join(',');
+        }
+
+        function normalizeAnswerLetter(answer) {
+            if (typeof answer !== 'string') return null;
+            const letter = answer.trim().charAt(0).toUpperCase();
+            return /^[A-E]$/.test(letter) ? letter : null;
+        }
+
+        function normalizeOptions(options) {
+            if (!Array.isArray(options)) return [];
+            return options
+                .filter((opt) => typeof opt === 'string')
+                .map((opt) => opt.trim())
+                .filter((opt) => opt.length > 0);
+        }
+
+        function prepareQuestion(raw) {
+            const safe = raw && typeof raw === 'object' ? raw : {};
+            const options = normalizeOptions(safe.options);
+            const answerLetter = normalizeAnswerLetter(safe.answer);
+            return {
+                ...safe,
+                question: typeof safe.question === 'string' ? safe.question : 'Вопрос без текста',
+                options,
+                __answerLetter: answerLetter
+            };
         }
 
         function openVariantPicker() {
@@ -6557,6 +6586,7 @@ const expectedVariantCounts = {
         function startVariantQuiz(variantNo) {
             currentIdx = 0;
             score = 0;
+            gradedTotal = 0;
             canAnswer = true;
             activeVariant = variantNo;
             document.getElementById('score').innerText = score;
@@ -6567,7 +6597,7 @@ const expectedVariantCounts = {
             entries.forEach(([variantQuestionNo, idx]) => {
                 if (!Number.isInteger(idx)) return;
                 if (idx < 0 || idx >= quizData.length) return;
-                sessionQuestions.push({ ...quizData[idx], __variantQuestionNo: variantQuestionNo });
+                sessionQuestions.push({ ...prepareQuestion(quizData[idx]), __variantQuestionNo: variantQuestionNo });
             });
 
             if (sessionQuestions.length === 0) {
@@ -6585,11 +6615,12 @@ const expectedVariantCounts = {
         function startQuiz(mode) {
             currentIdx = 0;
             score = 0;
+            gradedTotal = 0;
             canAnswer = true;
             activeVariant = null;
             document.getElementById('score').innerText = score;
 
-            let allQuestions = quizData.map((q, idx) => ({ ...q, __idx: idx }));
+            let allQuestions = quizData.map((q, idx) => ({ ...prepareQuestion(q), __idx: idx }));
             shuffleInPlace(allQuestions);
 
             if (mode === 'random') {
@@ -6630,8 +6661,11 @@ const expectedVariantCounts = {
 
         function showQuestion() {
             canAnswer = true;
-            const q = sessionQuestions[currentIdx];
+            const q = prepareQuestion(sessionQuestions[currentIdx]);
+            sessionQuestions[currentIdx] = q;
             document.getElementById('question-text').innerText = q.question;
+            const noteEl = document.getElementById('question-note');
+            if (noteEl) noteEl.innerText = '';
             const metaEl = document.getElementById('question-meta');
             if (metaEl) {
                 if (activeVariant !== null) {
@@ -6647,15 +6681,27 @@ const expectedVariantCounts = {
             }
             document.getElementById('current-idx').innerText = currentIdx + 1;
             document.getElementById('next-btn').style.display = 'none';
-            
+
             const container = document.getElementById('options-container');
             container.innerHTML = '';
 
-            q.options.forEach(opt => {
+            if (!q.options.length) {
+                canAnswer = false;
+                container.innerHTML = '<div style="color:#64748b; padding:12px; border:1px dashed #cbd5e1; border-radius:10px; background:#f8fafc;">\u0414\u043b\u044f \u044d\u0442\u043e\u0433\u043e \u0432\u043e\u043f\u0440\u043e\u0441\u0430 \u043d\u0435 \u0440\u0430\u0441\u043f\u043e\u0437\u043d\u0430\u043d\u044b \u0432\u0430\u0440\u0438\u0430\u043d\u0442\u044b \u043e\u0442\u0432\u0435\u0442\u0430. \u041d\u0430\u0436\u043c\u0438 \"\u0421\u043b\u0435\u0434\u0443\u044e\u0449\u0438\u0439\", \u0447\u0442\u043e\u0431\u044b \u043f\u0440\u043e\u0434\u043e\u043b\u0436\u0438\u0442\u044c.</div>';
+                if (noteEl) noteEl.innerText = '\u0412\u043e\u043f\u0440\u043e\u0441 \u043f\u0440\u043e\u043f\u0443\u0441\u043a\u0430\u0435\u0442\u0441\u044f: \u043d\u0435\u0442 \u0432\u0430\u0440\u0438\u0430\u043d\u0442\u043e\u0432 \u043e\u0442\u0432\u0435\u0442\u0430.';
+                document.getElementById('next-btn').style.display = 'block';
+                return;
+            }
+
+            if (!q.__answerLetter && noteEl) {
+                noteEl.innerText = '\u0414\u043b\u044f \u044d\u0442\u043e\u0433\u043e \u0432\u043e\u043f\u0440\u043e\u0441\u0430 \u043f\u043e\u043a\u0430 \u043d\u0435 \u0437\u0430\u0434\u0430\u043d \u043f\u0440\u0430\u0432\u0438\u043b\u044c\u043d\u044b\u0439 \u043e\u0442\u0432\u0435\u0442. \u041c\u043e\u0436\u043d\u043e \u043e\u0442\u0432\u0435\u0447\u0430\u0442\u044c \u0434\u043b\u044f \u0442\u0440\u0435\u043d\u0438\u0440\u043e\u0432\u043a\u0438.';
+            }
+
+            q.options.forEach((opt) => {
                 const btn = document.createElement('button');
                 btn.className = 'option';
                 btn.innerText = opt;
-                btn.onclick = () => checkAnswer(btn, opt, q.answer);
+                btn.onclick = () => checkAnswer(btn, opt, q.__answerLetter);
                 container.appendChild(btn);
             });
         }
@@ -6664,25 +6710,32 @@ const expectedVariantCounts = {
             if (!canAnswer) return;
             canAnswer = false;
 
-            // Извлекаем букву (первый символ строки)
             const selectedLetter = selected.trim().charAt(0).toUpperCase();
             const allBtns = document.querySelectorAll('.option');
+            const normalizedCorrect = normalizeAnswerLetter(correctLetter);
+            const noteEl = document.getElementById('question-note');
 
-            if (selectedLetter === correctLetter.toUpperCase()) {
+            if (!normalizedCorrect) {
+                btn.classList.add('correct');
+                if (noteEl) {
+                    noteEl.innerText = '\u041a\u043b\u044e\u0447 \u043e\u0442\u0432\u0435\u0442\u0430 \u0434\u043b\u044f \u044d\u0442\u043e\u0433\u043e \u0432\u043e\u043f\u0440\u043e\u0441\u0430 \u043e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442: \u043e\u0442\u0432\u0435\u0442 \u043e\u0442\u043c\u0435\u0447\u0435\u043d \u043a\u0430\u043a \u0442\u0440\u0435\u043d\u0438\u0440\u043e\u0432\u043e\u0447\u043d\u044b\u0439.';
+                }
+            } else if (selectedLetter === normalizedCorrect) {
                 btn.classList.add('correct');
                 score++;
+                gradedTotal++;
                 document.getElementById('score').innerText = score;
             } else {
+                gradedTotal++;
                 btn.classList.add('wrong');
-                // Подсвечиваем правильный вариант для заучивания
-                allBtns.forEach(b => {
-                    if (b.innerText.trim().toUpperCase().startsWith(correctLetter.toUpperCase())) {
+                allBtns.forEach((b) => {
+                    if (b.innerText.trim().toUpperCase().startsWith(`${normalizedCorrect})`)) {
                         b.classList.add('correct');
                     }
                 });
             }
 
-            allBtns.forEach(b => b.disabled = true);
+            allBtns.forEach((b) => { b.disabled = true; });
             document.getElementById('next-btn').style.display = 'block';
         }
 
@@ -6697,18 +6750,20 @@ const expectedVariantCounts = {
 
         function showResult() {
             const quizDiv = document.getElementById('quiz');
-            const percentage = Math.round((score / sessionQuestions.length) * 100);
-            let message = percentage >= 80 ? "Отличный результат!" : "Нужно еще попрактиковаться.";
-            
-            quizDiv.innerHTML = `
-                <div style="text-align:center; padding: 20px 0;">
-                    <h2 style="color: #1e293b;">Тест завершен!</h2>
+            const graded = gradedTotal;
+            const percentage = graded > 0 ? Math.round((score / graded) * 100) : 100;
+            let message = percentage >= 80 ? "\u041e\u0442\u043b\u0438\u0447\u043d\u044b\u0439 \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442!" : "\u041d\u0443\u0436\u043d\u043e \u0435\u0449\u0435 \u043f\u043e\u043f\u0440\u0430\u043a\u0442\u0438\u043a\u043e\u0432\u0430\u0442\u044c\u0441\u044f.";
+            const gradedInfo = graded < sessionQuestions.length
+                ? `\u0418\u0437\u0432\u0435\u0441\u0442\u043d\u044b\u0445 \u043e\u0442\u0432\u0435\u0442\u043e\u0432: <b>${graded}</b> \u0438\u0437 <b>${sessionQuestions.length}</b>. \u0412\u043e\u043f\u0440\u043e\u0441\u044b \u0431\u0435\u0437 \u043a\u043b\u044e\u0447\u0430 \u043d\u0435 \u0443\u0447\u0438\u0442\u044b\u0432\u0430\u043b\u0438\u0441\u044c \u0432 \u043f\u0440\u043e\u0446\u0435\u043d\u0442\u0435.`
+                : `\u0412\u044b \u043e\u0442\u0432\u0435\u0442\u0438\u043b\u0438 \u043f\u0440\u0430\u0432\u0438\u043b\u044c\u043d\u043e \u043d\u0430 <b>${score}</b> \u0438\u0437 <b>${sessionQuestions.length}</b> \u0432\u043e\u043f\u0440\u043e\u0441\u043e\u0432.`;
+
+            quizDiv.innerHTML = `<div style="text-align:center; padding: 20px 0;">
+                    <h2 style="color: #1e293b;">\u0422\u0435\u0441\u0442 \u0437\u0430\u0432\u0435\u0440\u0448\u0435\u043d!</h2>
                     <div style="font-size: 4rem; font-weight: bold; color: #6366f1; margin: 20px 0;">${percentage}%</div>
-                    <p style="font-size: 1.2rem; color: #64748b;">Вы ответили правильно на <b>${score}</b> из <b>${sessionQuestions.length}</b> вопросов.</p>
+                    <p style="font-size: 1.2rem; color: #64748b;">${gradedInfo}</p>
                     <p style="margin-bottom: 30px; color: #475569;">${message}</p>
-                    <button class="mode-btn" onclick="location.reload()">Вернуться в главное меню</button>
-                </div>
-            `;
+                    <button class="mode-btn" onclick="location.reload()">\u0412\u0435\u0440\u043d\u0443\u0442\u044c\u0441\u044f \u0432 \u0433\u043b\u0430\u0432\u043d\u043e\u0435 \u043c\u0435\u043d\u044e</button>
+                </div>`;
         }
     </script>
 </body>
